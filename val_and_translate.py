@@ -36,7 +36,7 @@ def word_validator_and_traslator(text: str,):
     if lang == 'ru_RU':
         try:
             text = re.sub("[^а-яёА-ЯЁ\s]", "", text)
-            text = re.sub(r"\x5E", "", text)
+            text = re.sub(r"[\x5E\\]", "", text)
             translate = ts.google(text, from_language='ru', to_language='en').lower()
             return re.sub("[\\s]{2,}", " ", text), translate
         except:
@@ -44,7 +44,7 @@ def word_validator_and_traslator(text: str,):
     elif lang == 'en_US':
         try:
             text = re.sub("[^a-zA-z\s]", "", text)
-            text = re.sub(r"\x5E", "", text)
+            text = re.sub(r"[\x5E\\]", "", text)
             translate = ts.google(text, from_language='en', to_language='ru').lower() 
             return translate, re.sub("[\\s]{2,}", " ", text)
         except:
