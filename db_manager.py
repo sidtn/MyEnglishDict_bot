@@ -30,3 +30,4 @@ class DbManage:
     def find_word(self, text):
         result = self.__cursor.execute(f"SELECT word, translate FROM words WHERE word LIKE '{text}' or translate LIKE '{text}';")
         return result.fetchone()
+        
