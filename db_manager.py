@@ -29,7 +29,7 @@ class DbManage:
         self.__conn.commit()
 
     def find_word(self, text):
-        result = self.__cursor.execute(f"SELECT word, translate FROM words WHERE word LIKE '{text}' or translate LIKE '{text}';")
+        result = self.__cursor.execute("SELECT word, translate FROM words WHERE word LIKE (?) or translate LIKE (?);", (text, text,))
         return result.fetchone()
 
     def get_word_for_test(self):
