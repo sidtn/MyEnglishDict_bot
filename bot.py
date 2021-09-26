@@ -5,6 +5,7 @@ from aiogram.utils.exceptions import ButtonDataInvalid
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.utils import executor
+from aiogram.utils.exceptions import ButtonDataInvalid
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from config import TOKEN
 from val_and_translate import word_validator_and_traslator
@@ -50,9 +51,12 @@ async def check_answer(call: types.CallbackQuery, state: FSMContext):
         await call.message.answer('Wrong')
     else:
         await call.message.answer('Correct') 
-        async with state.proxy() as data:
-            msg = data['name'] 
-            await words_trenager(msg, state)
+        try:
+            async with state.proxy() as data:
+                msg = data['name'] 
+                await words_trenager(msg, state)
+        except ButtonDataInvalid:
+            await call.message.answer('Sending error, click again')        
 
 
 @dp.message_handler()
