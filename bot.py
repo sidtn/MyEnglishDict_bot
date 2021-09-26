@@ -1,5 +1,4 @@
 import logging
-from os import stat
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.exceptions import ButtonDataInvalid
@@ -7,7 +6,6 @@ from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.utils import executor
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from attr import mutable
 from config import TOKEN
 from val_and_translate import word_validator_and_traslator
 from db_manager import DbManage
