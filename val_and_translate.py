@@ -2,6 +2,7 @@ import re
 from enchant.checker import SpellChecker
 import enchant
 import translators as ts
+from gtts import gTTS
 
 
 
@@ -37,15 +38,20 @@ def word_validator_and_traslator(text: str,):
         try:
             text = re.sub("[^'\-а-яёА-ЯЁ\s]", "", text)
             text = re.sub(r"[\x5E\\]", "", text)
+            text = re.sub("[\\s]{2,}", " ", text).strip()
             translate = ts.google(text, from_language='ru', to_language='en').lower()
-            return re.sub("[\\s]{2,}", " ", text), translate
+            return text, translate
         except:
             return 'The translation failed.'      
     elif lang == 'en_US':
         try:
             text = re.sub("[^'\-a-zA-z\s]", "", text)
             text = re.sub(r"[\x5E\\]", "", text)
+            text = re.sub("[\\s]{2,}", " ", text).strip()
             translate = ts.google(text, from_language='en', to_language='ru').lower() 
-            return translate, re.sub("[\\s]{2,}", " ", text)
+            if len(text.split(' ')) <=3:
+                tts = gTTS(text=text, lang='en')
+                tts.save(f'words_audio/{text}.mp3')
+            return translate, text
         except:
             return 'The translation failed.'
