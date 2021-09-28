@@ -54,11 +54,10 @@ async def add_user(call: types.CallbackQuery):
 async def check_answer(call: types.CallbackQuery, state: FSMContext):
     await call.answer()
     answer = call.data.split('_')[1:]
-    print(answer)
-    if answer[0].replace('@', '_') != answer[1]:
+    if answer[0].replace('@', ' ') != answer[1].replace('@', ' '):
         await call.message.answer('Wrong')
     else:
-        await call.message.answer('Correct') 
+        await call.message.answer('Correct')
         try:
             async with state.proxy() as data:
                 msg = data['name']
@@ -81,11 +80,14 @@ async def check_answer(call: types.CallbackQuery, state: FSMContext):
 async def delere_words(msg: types.Message):
     user_id = msg.from_user.id  
     words = db.get_words_for_delete(user_id)
-    for word in reversed(words):
-        keyboard = types.InlineKeyboardMarkup()
-        button = types.InlineKeyboardButton('Delete', callback_data=f'del_{word[0]}')
-        keyboard.add(button)
-        await msg.answer(f'{word[0]} - {word[1]}', reply_markup=keyboard)
+    if words:
+        for word in reversed(words):
+            keyboard = types.InlineKeyboardMarkup()
+            button = types.InlineKeyboardButton('Delete', callback_data=f'del_{word[0]}')
+            keyboard.add(button)
+            await msg.answer(f'{word[0]} - {word[1]}', reply_markup=keyboard)
+    else:
+        await msg.answer("You don't have any words to delete.")        
 
 
 @dp.message_handler(commands='test')
@@ -93,11 +95,13 @@ async def words_trenager(msg: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['name'] = msg
     testdata = db.get_word_for_test()
+    variants = list(map(lambda x: x.replace(' ', '@'), testdata[1]))
+    correct_answer = testdata[0][1].replace(' ', '@')
     keboard = types.InlineKeyboardMarkup(row_width=2)
     buttons_list = []
-    variants = list(map(lambda x: x.replace(' ', '@'), testdata[1]))
     for word in variants:
-        button = types.InlineKeyboardButton(word.replace('@', ' '), callback_data=f'test_{word}_{testdata[0][1]}')
+        callback_data = f'test_{word}_{correct_answer}'
+        button = types.InlineKeyboardButton(word.replace('@', ' '), callback_data=callback_data)
         buttons_list.append(button)
     keboard.add(buttons_list[0], buttons_list[1])
     keboard.add(buttons_list[2], buttons_list[3])
@@ -130,7 +134,7 @@ async def input_from_other_user(msg: types.Message):
         keyboard = types.InlineKeyboardMarkup()
         button = types.InlineKeyboardButton('Click', callback_data=f'request_{str(msg.from_user.id)}_{msg.from_user.username}')
         keyboard.add(button)
-        await msg.answer("If you want to use the bot, tap on the button,"
+        await msg.answer("If you want to translate and add words, click on the button,"
                          "and admin will receive your request.", reply_markup=keyboard)
 
 

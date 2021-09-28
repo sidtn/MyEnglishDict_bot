@@ -46,8 +46,8 @@ class DbManage:
         return result.fetchone()
 
     def get_word_for_test(self):
-        word = self.__cursor.execute("SELECT word, translate FROM words;").fetchall()
-        words = random.choices(word, k=4)
+        all_records = self.__cursor.execute("SELECT word, translate FROM words;").fetchall()
+        words = random.choices(all_records, k=4)
         variants = [words[0][1], words[1][1], words[2][1], words[3][1]]
         random.shuffle(variants)
         return words[0], tuple(variants)
@@ -76,4 +76,4 @@ class DbManage:
 
 
 # db = DbManage('words.db')
-# db.download_audio()
+# print(db.get_word_for_test())
