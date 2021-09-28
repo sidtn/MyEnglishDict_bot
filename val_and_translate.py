@@ -5,10 +5,6 @@ import translators as ts
 from gtts import gTTS
 
 
-
-kirill = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
-
-            
 def word_validator_and_traslator(text: str,):
 
     '''this function parses input, if iunput is valid, translate the word or phrase
@@ -20,7 +16,7 @@ def word_validator_and_traslator(text: str,):
     elif re.match(r'[a-z]', text[0]):
         lang = 'en_US'
     else:
-        return 'А word or phrase must begin with a letter.'    
+        return 'А word or phrase must begin with a letter.'
     chkr = SpellChecker(lang)
     chkr.set_text(text)
     list_err = []
@@ -40,18 +36,24 @@ def word_validator_and_traslator(text: str,):
             text = re.sub(r"[\x5E\\]", "", text)
             text = re.sub("[\\s]{2,}", " ", text).strip()
             translate = ts.google(text, from_language='ru', to_language='en').lower()
+            if len(translate.split(' ')) <= 3:
+                download_audio(translate)
             return text, translate
         except:
-            return 'The translation failed.'      
+            return 'The translation failed.'
     elif lang == 'en_US':
         try:
             text = re.sub("[^'\-a-zA-z\s]", "", text)
             text = re.sub(r"[\x5E\\]", "", text)
             text = re.sub("[\\s]{2,}", " ", text).strip()
             translate = ts.google(text, from_language='en', to_language='ru').lower() 
-            if len(text.split(' ')) <=3:
-                tts = gTTS(text=text, lang='en')
-                tts.save(f'words_audio/{text}.mp3')
+            if len(text.split(' ')) <= 3:
+                download_audio(text)
             return translate, text
         except:
             return 'The translation failed.'
+
+
+def download_audio(name_audio):
+    tts = gTTS(text=name_audio, lang='en')
+    tts.save(f'words_audio/{name_audio}.mp3')

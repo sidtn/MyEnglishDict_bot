@@ -6,7 +6,7 @@ from gtts import gTTS
 import shutil
 import os
 from tqdm import tqdm
-from multiprocess.pool import Pool
+
 
 
 
@@ -58,7 +58,7 @@ class DbManage:
         return words
 
     def del_record(self, word):
-        record = self.__cursor.execute("DELETE FROM words WHERE word like (?);", (word,))
+        record = self.__cursor.execute("DELETE FROM words WHERE word LIKE (?);", (word,))
         self.__conn.commit()   
      
     def download_audio(self):
@@ -68,13 +68,12 @@ class DbManage:
         except OSError:
             os.mkdir('words_audio')           
         all_words = self.__cursor.execute("SELECT word FROM words").fetchall()
-        def func_for_map(text):
+        for text in tqdm(all_words, total=len(all_words)):
             tts = gTTS(text=text[0], lang='en')
             tts.save(f'words_audio/{text[0]}.mp3')
-        with Pool(os.cpu_count()) as p:
-            progress = list(tqdm(p.imap(func_for_map, all_words), total=len(all_words)))
+
 
 
 
 # db = DbManage('words.db')
-# db.get_users()
+# db.download_audio()
