@@ -1,7 +1,5 @@
-from collections import UserList
 import sqlite3
 import random
-from aiogram.types import user
 from gtts import gTTS
 import shutil
 import os
@@ -21,38 +19,50 @@ class DbManage:
 
     def create_tables(self):
         self.__cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER UNIQUE,"
-                              " TEXT DEFAULT CURRENT_TIMESTAMP);")
+                              "date TEXT DEFAULT CURRENT_TIMESTAMP);")
         self.__cursor.execute("CREATE TABLE IF NOT EXISTS words (id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                              " user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE RESTRICT,"
-                              " date TEXT DEFAULT CURRENT_TIMESTAMP, word TEXT UNIQUE, translate TEXT);")
+                              " user_id INTEGER NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,"
+                              " date TEXT DEFAULT CURRENT_TIMESTAMP, word TEXT, translate TEXT);")
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS irregularverb (id INTEGER PRIMARY KEY AUTOINCREMENT, form1 TEXT UNIQUE NOT NULL,"
+                              " form2 TEXT NOT NULL, form3 TEXT NOT NULL, translate NOT NULL)")
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbform(id INTEGER PRIMARY KEY AUTOINCREMENT, form TEXT NOT NULL)")
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbs (id INTEGER PRIMARY KEY AUTOINCREMENT, word TEXT UNIQUE NOT NULL,"
+                              "form INTEGER NOT NULL REFERENCES verbform (id) ON DELETE RESTRICT)")
 
     def get_users(self):
-         userslist = [user[0] for user in self.__cursor.execute("SELECT user_id FROM users").fetchall()]
-         return userslist
+        userslist = [user[0] for user in self.__cursor.execute("SELECT user_id FROM users").fetchall()]
+        return userslist
                            
     def add_user(self, user_id):
-        self.__cursor.execute("INSERT OR IGNORE INTO users (user_id) VALUES(?)", (user_id,))
+        self.__cursor.execute("INSERT INTO users (user_id) VALUES(?)", (user_id,))
         self.__conn.commit()
 
     def add_word(self, user_id, word, translate):
-        self.__cursor.execute("INSERT OR IGNORE INTO words (user_id, word, translate)"
+        self.__cursor.execute("INSERT INTO words (user_id, word, translate)"
                               " VALUES(?, ?, ?);", (user_id, word, translate))
         self.__conn.commit()
 
-    def find_word(self, text):
-        result = self.__cursor.execute("SELECT word, translate FROM words WHERE word LIKE (?)"
-                                       "or translate LIKE (?);", (text, text,))
+    def find_word(self, text, user_id=None):
+        if user_id:
+            result = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id=(?) and word LIKE (?)"
+                                           "or translate LIKE (?);", (user_id, text, text,))
+        else:
+            result = self.__cursor.execute("SELECT word, translate FROM words WHERE word LIKE (?)"
+                                           "or translate LIKE (?);", (text, text,))
         return result.fetchone()
 
     def get_word_for_test(self, for_user=None):
         if for_user == None:
             all_records = self.__cursor.execute("SELECT word, translate FROM words;").fetchall()
         else:
-            all_records = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id=(?);", (for_user,)).fetchall() 
-        words = random.choices(all_records, k=4)
-        variants = [words[0][1], words[1][1], words[2][1], words[3][1]]
-        random.shuffle(variants)
-        return words[0], tuple(variants)
+            all_records = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id=(?);", (for_user,)).fetchall()
+        if all_records:    
+            words = random.choices(all_records, k=4)
+            variants = [words[0][1], words[1][1], words[2][1], words[3][1]]
+            random.shuffle(variants)
+            return words[0], tuple(variants)
+        else:
+            return ()   
 
     def get_irregular_vebs(self, word):
         result = self.__cursor.execute("SELECT * FROM irregularverb WHERE form1 LIKE (?)"
@@ -63,7 +73,7 @@ class DbManage:
     def get_data_from_verbs(self, word):
         result = self.__cursor.execute("SELECT word, verbform.form FROM verbs JOIN verbform ON"
                                        " verbs.form = verbform.id WHERE word LIKE (?);", (word,))
-        return result.fetchone()  
+        return result.fetchone()
 
     def get_words_for_delete(self, user_id):
         words = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id LIKE (?)"
@@ -85,23 +95,30 @@ class DbManage:
             tts = gTTS(text=text[0], lang='en')
             tts.save(f'words_audio/{text[0]}.mp3')
 
-    def create_tables_verbs(self):
-        self.__cursor.execute("CREATE TABLE IF NOT EXISTS irregularverb (id INTEGER PRIMARY KEY AUTOINCREMENT, form1 TEXT UNIQUE NOT NULL,"
-                              " form2 TEXT NOT NULL, form3 TEXT NOT NULL, translate NOT NULL)")
-        self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbform(id INTEGER PRIMARY KEY AUTOINCREMENT, form TEXT NOT NULL)")
-        self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbs (id INTEGER PRIMARY KEY AUTOINCREMENT, word TEXT UNIQUE NOT NULL,"
-                              "form INTEGER NOT NULL REFERENCES verbform (id) ON DELETE RESTRICT)")
 
     def insert_data_irregular(self, data):
         for row in data:
-            self.__cursor.execute("INSERT INTO irregularverb(form1, form2, form3, translate) VALUES(?, ?, ?, ?)", row)
+            self.__cursor.execute("INSERT OR IGNORE INTO irregularverb(form1, form2, form3, translate) VALUES(?, ?, ?, ?)", row)
             self.__conn.commit()
 
     def insert_data_gerund(self, data):
         for num, list_words in enumerate(data, 1):
             for word in list_words:
-                self.__cursor.execute("INSERT INTO verbs(word, form) VALUES(?, ?)", (word, num))
+                self.__cursor.execute("INSERT OR IGNORE INTO verbs(word, form) VALUES(?, ?)", (word, num))
                 self.__conn.commit()
+
+    def insert_data_in_words(self, data):
+        for row in data:
+            self.__cursor.execute("INSERT OR IGNORE INTO words(user_id, word, translate) VALUES(?, ?, ?)", (row[0], row[1], row[2]))
+            self.__conn.commit()
+
+    def get_data_from_db1(self):
+        data = self.__cursor.execute("SELECT user_id, word, translate FROM words")
+        return data.fetchall()
 
 
 # db = DbManage('words.db')
+# db.create_tables()
+# db.insert_data_gerund(get_gerund_or_inf())
+# db.insert_data_irregular(get_irregular_verbs())
+# db.download_audio()

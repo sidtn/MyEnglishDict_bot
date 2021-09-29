@@ -7,7 +7,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.utils import executor
 from aiogram.utils.exceptions import ButtonDataInvalid
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from config import TOKEN, ALLOWED_USERS, ADMIN_ID
+from config import TOKEN, ADMIN_ID, ALLOWED_USERS
 from val_and_translate import word_validator_and_traslator
 from db_manager import DbManage
 import os
@@ -18,6 +18,7 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=storage)
 logging.basicConfig(level=logging.INFO)
 db = DbManage('words.db')
+ALLOWED_USERS = db.get_users()
 
 
 class Form(StatesGroup):
@@ -37,6 +38,8 @@ async def process_start_command(msg: types.Message):
     '<b>For registration send any text to the bot.</b>', parse_mode=types.ParseMode.HTML)
 
 
+ALLOWED_USERS = db.get_users()
+
 @dp.callback_query_handler(lambda c: c.data.startswith('request_'))
 async def user_request(call: types.CallbackQuery):
     await call.answer()
@@ -54,9 +57,13 @@ async def add_user(call: types.CallbackQuery):
     await call.answer()
     user_id = int(call.data.split('_')[1])
     db.add_user(user_id)
+    global ALLOWED_USERS
+    ALLOWED_USERS = db.get_users()
     await bot.delete_message(call.from_user.id, message_id=call.message.message_id)
     await bot.send_message(call.from_user.id, f'The user with id {user_id} has been added.')
     await bot.send_message(user_id, 'Yor request is approved. You can use the bot')
+
+
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('test_'))
@@ -155,16 +162,21 @@ async def show_gerund_or_inf(msg: types.Message):
 
 @dp.message_handler(lambda msg: msg.from_user.id in ALLOWED_USERS)
 async def answer_translator(msg: types.Message):
-    word_in_db = db.find_word(msg.text.lower().strip())
-    if word_in_db:
-        audio = open(f'words_audio/{word_in_db[0]}.mp3', 'rb')
-        await bot.send_voice(msg.from_user.id, voice=audio, caption=f'{word_in_db[0]} - {word_in_db[1]}')
-    else:    
+    word_in_db_user = db.find_word(msg.text.lower().strip(), msg.from_user.id)
+    word_in_db_all = db.find_word(msg.text.lower().strip())
+    if word_in_db_user:
+        audio = open(f'words_audio/{word_in_db_user[0]}.mp3', 'rb')
+        await bot.send_voice(msg.from_user.id, voice=audio, caption=f'{word_in_db_user[0]} - {word_in_db_user[1]}')
+    elif word_in_db_all:
+        audio = open(f'words_audio/{word_in_db_all[0]}.mp3', 'rb')
+        await bot.send_voice(msg.from_user.id, voice=audio, caption=f'{word_in_db_all[0]} - {word_in_db_all[1]}')
+        db.add_word(msg.from_user.id, word_in_db_all[0], word_in_db_all[1])
+    else:
         result = word_validator_and_traslator(msg.text)
         if isinstance(result, str):
-            await msg.answer(result)   
+            await msg.answer(result)
         else:
-            if len(result[1].split(' ')) <= 3: 
+            if len(result[1].split(' ')) <= 3:
                 db.add_word(msg.from_user.id, result[1], result[0])
                 audio = open(f'words_audio/{result[1]}.mp3', 'rb')
                 await bot.send_voice(msg.from_user.id, voice=audio, caption=f'{result[1]} - {result[0]}')

@@ -3,7 +3,9 @@ from enchant.checker import SpellChecker
 import enchant
 import translators as ts
 from gtts import gTTS
+from db_manager import DbManage
 
+db = DbManage('words.db')
 
 def word_validator_and_traslator(text: str,):
 
@@ -37,7 +39,8 @@ def word_validator_and_traslator(text: str,):
             text = re.sub("[\\s]{2,}", " ", text).strip()
             translate = ts.google(text, from_language='ru', to_language='en').lower()
             if len(translate.split(' ')) <= 3:
-                download_audio(translate)
+                if not db.find_word(translate):
+                    download_audio(translate)
             return text, translate
         except:
             return 'The translation failed.'
@@ -48,7 +51,8 @@ def word_validator_and_traslator(text: str,):
             text = re.sub("[\\s]{2,}", " ", text).strip()
             translate = ts.google(text, from_language='en', to_language='ru').lower() 
             if len(text.split(' ')) <= 3:
-                download_audio(text)
+                if not db.find_word(text):
+                    download_audio(text)
             return translate, text
         except:
             return 'The translation failed.'
