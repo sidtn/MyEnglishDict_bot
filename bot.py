@@ -26,7 +26,13 @@ class Form(StatesGroup):
 
 @dp.message_handler(commands=['start', 'help'])
 async def process_start_command(msg: types.Message):
-    await msg.reply("Bot assistant for learning English words.")
+    await msg.reply(f'Hi {msg.from_user.username}.\n'
+    'This is a bot assistant for learning English words.\n'
+    'List of available commands:\n'
+    '/test - training the words of all users;\n'
+    '/mytest - training the words from your dictionaty;\n'
+    '/del - shows a list of the last 5 words with buttons for delete;\n'
+    'For registration send any text to the bot.')
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('request_'))
@@ -48,6 +54,7 @@ async def add_user(call: types.CallbackQuery):
     db.add_user(user_id)
     await bot.delete_message(call.from_user.id, message_id=call.message.message_id)
     await bot.send_message(call.from_user.id, f'The user with id {user_id} has been added.')
+    await bot.send_message(user_id, 'Yor request is approved. You can use the bot')
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('test_'))  
@@ -78,7 +85,7 @@ async def check_answer(call: types.CallbackQuery, state: FSMContext):
 
 @dp.message_handler(commands='del')
 async def delere_words(msg: types.Message):
-    user_id = msg.from_user.id  
+    user_id = msg.from_user.id
     words = db.get_words_for_delete(user_id)
     if words:
         for word in reversed(words):
@@ -90,25 +97,36 @@ async def delere_words(msg: types.Message):
         await msg.answer("You don't have any words to delete.")        
 
 
-@dp.message_handler(commands='test')
+@dp.message_handler(commands=['test', 'mytest'])
 async def words_trenager(msg: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['name'] = msg
-    testdata = db.get_word_for_test()
-    variants = list(map(lambda x: x.replace(' ', '@'), testdata[1]))
-    correct_answer = testdata[0][1].replace(' ', '@')
-    keboard = types.InlineKeyboardMarkup(row_width=2)
-    buttons_list = []
-    for word in variants:
-        callback_data = f'test_{word}_{correct_answer}'
-        if len(callback_data.encode('utf-8')) > 62:
-            callback_data = f'test_{word[0:7]}_{correct_answer[0:7]}'
-        button = types.InlineKeyboardButton(word.replace('@', ' '), callback_data=callback_data)
-        buttons_list.append(button)
-    keboard.add(buttons_list[0], buttons_list[1])
-    keboard.add(buttons_list[2], buttons_list[3])
-    audio = open(f'words_audio/{testdata[0][0]}.mp3', 'rb')
-    await bot.send_voice(msg.from_user.id, voice=audio, caption=testdata[0][0], reply_markup=keboard)
+    if msg.text == '/test':   
+        testdata = db.get_word_for_test()
+        from_dict = ''
+    else:
+        testdata = db.get_word_for_test(for_user=msg.from_user.id)
+        from_dict = f'[from dict {msg.from_user.username}]'
+    if testdata:
+        variants = list(map(lambda x: x.replace(' ', '@'), testdata[1]))
+        correct_answer = testdata[0][1].replace(' ', '@')
+        keboard = types.InlineKeyboardMarkup(row_width=2)
+        buttons_list = []
+        for word in variants:
+            callback_data = f'test_{word}_{correct_answer}'
+            if len(callback_data.encode('utf-8')) > 62:
+                callback_data = f'test_{word[0:5]}_{correct_answer[0:5]}'
+            button = types.InlineKeyboardButton(word.replace('@', ' '), callback_data=callback_data)
+            buttons_list.append(button)
+        keboard.add(buttons_list[0], buttons_list[1])
+        keboard.add(buttons_list[2], buttons_list[3])
+        audio = open(f'words_audio/{testdata[0][0]}.mp3', 'rb')
+        await bot.send_voice(msg.from_user.id, voice=audio, 
+                             caption=f"<b>{testdata[0][0]}</b>{' '*10}<i>{from_dict}</i>", 
+                             reply_markup=keboard, 
+                             parse_mode=types.ParseMode.HTML)
+    else:
+        await msg.answer("There no the words for testing")
 
 
 @dp.message_handler(lambda msg: msg.from_user.id in ALLOWED_USERS)
@@ -131,12 +149,12 @@ async def answer_translator(msg: types.Message):
 
 
 @dp.message_handler()
-async def input_from_other_user(msg: types.Message):
+async def input_from_unregistered_user(msg: types.Message):
     if msg.from_user.id not in ALLOWED_USERS:
         keyboard = types.InlineKeyboardMarkup()
         button = types.InlineKeyboardButton('Click', callback_data=f'request_{str(msg.from_user.id)}_{msg.from_user.username}')
         keyboard.add(button)
-        await msg.answer("If you want to translate and add words, click on the button,"
+        await msg.answer("If you want to translate and add words to the you dictionary, click on the button,"
                          "and admin will receive your request.", reply_markup=keyboard)
 
 

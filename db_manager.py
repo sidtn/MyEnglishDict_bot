@@ -45,8 +45,11 @@ class DbManage:
                                        "or translate LIKE (?);", (text, text,))
         return result.fetchone()
 
-    def get_word_for_test(self):
-        all_records = self.__cursor.execute("SELECT word, translate FROM words;").fetchall()
+    def get_word_for_test(self, for_user=None):
+        if for_user == None:
+            all_records = self.__cursor.execute("SELECT word, translate FROM words;").fetchall()
+        else:
+            all_records = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id=(?);", (for_user,)).fetchall() 
         words = random.choices(all_records, k=4)
         variants = [words[0][1], words[1][1], words[2][1], words[3][1]]
         random.shuffle(variants)
@@ -54,7 +57,7 @@ class DbManage:
 
     def get_words_for_delete(self, user_id):
         words = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id LIKE (?)"
-                                      "ORDER BY rowid DESC LIMIT 10;", (user_id,)).fetchall()
+                                      "ORDER BY rowid DESC LIMIT 5;", (user_id,)).fetchall()
         return words
 
     def del_record(self, word):
