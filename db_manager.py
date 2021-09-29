@@ -6,8 +6,7 @@ from gtts import gTTS
 import shutil
 import os
 from tqdm import tqdm
-
-
+from get_data_for_base import *
 
 
 class DbManage:
@@ -21,9 +20,9 @@ class DbManage:
             print('no connect to base')
 
     def create_tables(self):
-        self.__cursor.execute("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER UNIQUE,"
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER UNIQUE,"
                               " TEXT DEFAULT CURRENT_TIMESTAMP);")
-        self.__cursor.execute("CREATE TABLE words (id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS words (id INTEGER PRIMARY KEY AUTOINCREMENT,"
                               " user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE RESTRICT,"
                               " date TEXT DEFAULT CURRENT_TIMESTAMP, word TEXT UNIQUE, translate TEXT);")
 
@@ -75,8 +74,20 @@ class DbManage:
             tts = gTTS(text=text[0], lang='en')
             tts.save(f'words_audio/{text[0]}.mp3')
 
+    def create_tables_verbs(self):
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS irregularverb (id INTEGER PRIMARY KEY AUTOINCREMENT, form1 TEXT UNIQUE NOT NULL,"
+                              " form2 TEXT NOT NULL, form3 TEXT NOT NULL, translate NOT NULL)")
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbform(id INTEGER PRIMARY KEY AUTOINCREMENT, form TEXT NOT NULL)")
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbs (id INTEGER PRIMARY KEY AUTOINCREMENT, word TEXT UNIQUE NOT NULL,"
+                              " INTEGER NOT NULL REFERENCES verbform (id) ON DELETE RESTRICT)")
+
+    def insert_data_irregular(self, data):
+        for row in data:
+            self.__cursor.execute("INSERT INTO irregularverb(form1, form2, form3, translate) VALUES(?, ?, ?, ?)", row)
+            self.__conn.commit()
 
 
 
-# db = DbManage('words.db')
-# print(db.get_word_for_test())
+db = DbManage('words.db')
+# db.create_tables_verbs()
+db.insert_data_irregular(get_irregular_verbs())
