@@ -5,9 +5,8 @@ from aiogram.utils.exceptions import ButtonDataInvalid
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.utils import executor
-from aiogram.utils.exceptions import ButtonDataInvalid
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from config import TOKEN, ADMIN_ID, ALLOWED_USERS
+from config import TOKEN, ADMIN_ID
 from val_and_translate import word_validator_and_traslator
 from db_manager import DbManage
 import os
@@ -38,8 +37,6 @@ async def process_start_command(msg: types.Message):
     '<b>For registration send any text to the bot.</b>', parse_mode=types.ParseMode.HTML)
 
 
-ALLOWED_USERS = db.get_users()
-
 @dp.callback_query_handler(lambda c: c.data.startswith('request_'))
 async def user_request(call: types.CallbackQuery):
     await call.answer()
@@ -62,8 +59,6 @@ async def add_user(call: types.CallbackQuery):
     await bot.delete_message(call.from_user.id, message_id=call.message.message_id)
     await bot.send_message(call.from_user.id, f'The user with id {user_id} has been added.')
     await bot.send_message(user_id, 'Yor request is approved. You can use the bot')
-
-
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('test_'))

@@ -18,15 +18,19 @@ class DbManage:
             print('no connect to base')
 
     def create_tables(self):
-        self.__cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER UNIQUE,"
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS users "
+                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER UNIQUE,"
                               "date TEXT DEFAULT CURRENT_TIMESTAMP);")
         self.__cursor.execute("CREATE TABLE IF NOT EXISTS words (id INTEGER PRIMARY KEY AUTOINCREMENT,"
                               " user_id INTEGER NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,"
                               " date TEXT DEFAULT CURRENT_TIMESTAMP, word TEXT, translate TEXT);")
-        self.__cursor.execute("CREATE TABLE IF NOT EXISTS irregularverb (id INTEGER PRIMARY KEY AUTOINCREMENT, form1 TEXT UNIQUE NOT NULL,"
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS irregularverb "
+                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, form1 TEXT UNIQUE NOT NULL,"
                               " form2 TEXT NOT NULL, form3 TEXT NOT NULL, translate NOT NULL)")
-        self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbform(id INTEGER PRIMARY KEY AUTOINCREMENT, form TEXT NOT NULL)")
-        self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbs (id INTEGER PRIMARY KEY AUTOINCREMENT, word TEXT UNIQUE NOT NULL,"
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbform "
+                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, form TEXT NOT NULL)")
+        self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbs "
+                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, word TEXT UNIQUE NOT NULL,"
                               "form INTEGER NOT NULL REFERENCES verbform (id) ON DELETE RESTRICT)")
 
     def get_users(self):
@@ -44,7 +48,8 @@ class DbManage:
 
     def find_word(self, text, user_id=None):
         if user_id:
-            result = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id=(?) and word LIKE (?)"
+            result = self.__cursor.execute("SELECT word, translate FROM words"
+                                           " WHERE user_id=(?) and word LIKE (?)"
                                            "or translate LIKE (?);", (user_id, text, text,))
         else:
             result = self.__cursor.execute("SELECT word, translate FROM words WHERE word LIKE (?)"
@@ -55,7 +60,8 @@ class DbManage:
         if for_user == None:
             all_records = self.__cursor.execute("SELECT word, translate FROM words;").fetchall()
         else:
-            all_records = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id=(?);", (for_user,)).fetchall()
+            all_records = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id=(?);", 
+                                               (for_user,)).fetchall()
         if all_records:    
             words = random.choices(all_records, k=4)
             variants = [words[0][1], words[1][1], words[2][1], words[3][1]]
@@ -98,18 +104,21 @@ class DbManage:
 
     def insert_data_irregular(self, data):
         for row in data:
-            self.__cursor.execute("INSERT OR IGNORE INTO irregularverb(form1, form2, form3, translate) VALUES(?, ?, ?, ?)", row)
+            self.__cursor.execute("INSERT OR IGNORE INTO irregularverb"
+                "(form1, form2, form3, translate) VALUES(?, ?, ?, ?)", row)
             self.__conn.commit()
 
     def insert_data_gerund(self, data):
         for num, list_words in enumerate(data, 1):
             for word in list_words:
-                self.__cursor.execute("INSERT OR IGNORE INTO verbs(word, form) VALUES(?, ?)", (word, num))
+                self.__cursor.execute("INSERT OR IGNORE INTO verbs(word, form)"
+                    " VALUES(?, ?)", (word, num))
                 self.__conn.commit()
 
     def insert_data_in_words(self, data):
         for row in data:
-            self.__cursor.execute("INSERT OR IGNORE INTO words(user_id, word, translate) VALUES(?, ?, ?)", (row[0], row[1], row[2]))
+            self.__cursor.execute("INSERT OR IGNORE INTO words(user_id, word, translate)"
+                " VALUES(?, ?, ?)", (row[0], row[1], row[2]))
             self.__conn.commit()
 
     def get_data_from_db1(self):
@@ -118,7 +127,6 @@ class DbManage:
 
 
 # db = DbManage('words.db')
-# db.create_tables()
 # db.insert_data_gerund(get_gerund_or_inf())
 # db.insert_data_irregular(get_irregular_verbs())
 # db.download_audio()
