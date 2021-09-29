@@ -54,6 +54,17 @@ class DbManage:
         random.shuffle(variants)
         return words[0], tuple(variants)
 
+    def get_irregular_vebs(self, word):
+        result = self.__cursor.execute("SELECT * FROM irregularverb WHERE form1 LIKE (?)"
+                                       "OR form2 LIKE (?) OR form3 LIKE (?) OR translate LIKE (?)",
+                                       (word.lower(), word.lower(), word.lower(), word.title()))
+        return result.fetchone()
+
+    def get_data_from_verbs(self, word):
+        result = self.__cursor.execute("SELECT word, verbform.form FROM verbs JOIN verbform ON"
+                                       " verbs.form = verbform.id WHERE word LIKE (?);", (word,))
+        return result.fetchone()  
+
     def get_words_for_delete(self, user_id):
         words = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id LIKE (?)"
                                       "ORDER BY rowid DESC LIMIT 5;", (user_id,)).fetchall()
@@ -79,15 +90,18 @@ class DbManage:
                               " form2 TEXT NOT NULL, form3 TEXT NOT NULL, translate NOT NULL)")
         self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbform(id INTEGER PRIMARY KEY AUTOINCREMENT, form TEXT NOT NULL)")
         self.__cursor.execute("CREATE TABLE IF NOT EXISTS verbs (id INTEGER PRIMARY KEY AUTOINCREMENT, word TEXT UNIQUE NOT NULL,"
-                              " INTEGER NOT NULL REFERENCES verbform (id) ON DELETE RESTRICT)")
+                              "form INTEGER NOT NULL REFERENCES verbform (id) ON DELETE RESTRICT)")
 
     def insert_data_irregular(self, data):
         for row in data:
             self.__cursor.execute("INSERT INTO irregularverb(form1, form2, form3, translate) VALUES(?, ?, ?, ?)", row)
             self.__conn.commit()
 
+    def insert_data_gerund(self, data):
+        for num, list_words in enumerate(data, 1):
+            for word in list_words:
+                self.__cursor.execute("INSERT INTO verbs(word, form) VALUES(?, ?)", (word, num))
+                self.__conn.commit()
 
 
-db = DbManage('words.db')
-# db.create_tables_verbs()
-db.insert_data_irregular(get_irregular_verbs())
+# db = DbManage('words.db')

@@ -32,7 +32,9 @@ async def process_start_command(msg: types.Message):
     '/test - training the words of all users;\n'
     '/mytest - training the words from your dictionaty;\n'
     '/del - shows a list of the last 5 words with buttons for delete;\n'
-    'For registration send any text to the bot.')
+    '/f and verb - shows irregular verb forms;\n'
+    '/g and verb - shows infinitive or gerund to be used after the verb;\n'
+    '<b>For registration send any text to the bot.</b>', parse_mode=types.ParseMode.HTML)
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('request_'))
@@ -57,7 +59,7 @@ async def add_user(call: types.CallbackQuery):
     await bot.send_message(user_id, 'Yor request is approved. You can use the bot')
 
 
-@dp.callback_query_handler(lambda c: c.data.startswith('test_'))  
+@dp.callback_query_handler(lambda c: c.data.startswith('test_'))
 async def check_answer(call: types.CallbackQuery, state: FSMContext):
     await call.answer()
     answer = call.data.split('_')[1:]
@@ -73,7 +75,7 @@ async def check_answer(call: types.CallbackQuery, state: FSMContext):
             await call.message.answer('Sending error, click again')
 
 
-@dp.callback_query_handler(lambda c: c.data.startswith('del_'))  
+@dp.callback_query_handler(lambda c: c.data.startswith('del_'))
 async def check_answer(call: types.CallbackQuery, state: FSMContext):
     await call.answer()
     word_for_delete = call.data.split('_')[1]
@@ -94,7 +96,7 @@ async def delere_words(msg: types.Message):
             keyboard.add(button)
             await msg.answer(f'{word[0]} - {word[1]}', reply_markup=keyboard)
     else:
-        await msg.answer("You don't have any words to delete.")        
+        await msg.answer("You don't have any words to delete.")
 
 
 @dp.message_handler(commands=['test', 'mytest'])
@@ -127,6 +129,28 @@ async def words_trenager(msg: types.Message, state: FSMContext):
                              parse_mode=types.ParseMode.HTML)
     else:
         await msg.answer("There no the words for testing")
+
+
+@dp.message_handler(lambda msg: msg.text.startswith('/f'))
+async def show_irregular_verbs(msg: types.Message):
+    msg_text = msg.text.lstrip('/f').strip()
+    verb_forms = db.get_irregular_vebs(msg_text)
+    if verb_forms:
+        await msg.answer(f'<b>{verb_forms[4]}</b>\n{verb_forms[1]}\n{verb_forms[2]}\n{verb_forms[3]}',
+                            parse_mode=types.ParseMode.HTML)
+    else:
+        await msg.answer(f'Word [{msg_text}] not found.')
+
+
+@dp.message_handler(lambda msg: msg.text.startswith('/g'))
+async def show_gerund_or_inf(msg: types.Message):
+    msg_text = msg.text.lstrip('/g').strip()
+    result = db.get_data_from_verbs(msg_text)
+    if result:
+        await msg.answer(f'<b>{result[1]}</b> is used after the word <b>"{result[0]}"</b>',
+                            parse_mode=types.ParseMode.HTML)
+    else:
+        await msg.answer(f'Word [{msg_text}] not found.')
 
 
 @dp.message_handler(lambda msg: msg.from_user.id in ALLOWED_USERS)
