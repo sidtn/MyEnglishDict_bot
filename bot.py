@@ -101,6 +101,8 @@ async def words_trenager(msg: types.Message, state: FSMContext):
     buttons_list = []
     for word in variants:
         callback_data = f'test_{word}_{correct_answer}'
+        if len(callback_data.encode('utf-8')) > 62:
+            callback_data = f'test_{word[0:7]}_{correct_answer[0:7]}'
         button = types.InlineKeyboardButton(word.replace('@', ' '), callback_data=callback_data)
         buttons_list.append(button)
     keboard.add(buttons_list[0], buttons_list[1])
