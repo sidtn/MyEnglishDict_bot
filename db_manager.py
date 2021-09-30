@@ -68,7 +68,7 @@ class DbManage:
             random.shuffle(variants)
             return words[0], tuple(variants)
         else:
-            return ()   
+            return ()
 
     def get_irregular_vebs(self, word):
         result = self.__cursor.execute("SELECT * FROM irregularverb WHERE form1 LIKE (?)"
@@ -89,14 +89,14 @@ class DbManage:
     def del_record(self, word):
         record = self.__cursor.execute("DELETE FROM words WHERE word LIKE (?);", (word,))
         self.__conn.commit()   
-     
+
     def download_audio(self):
         try:
             shutil.rmtree('words_audio')
             os.mkdir('words_audio')
         except OSError:
-            os.mkdir('words_audio')           
-        all_words = self.__cursor.execute("SELECT word FROM words").fetchall()
+            os.mkdir('words_audio')
+        all_words = set(self.__cursor.execute("SELECT word FROM words").fetchall())
         for text in tqdm(all_words, total=len(all_words)):
             tts = gTTS(text=text[0], lang='en')
             tts.save(f'words_audio/{text[0]}.mp3')
@@ -114,16 +114,6 @@ class DbManage:
                 self.__cursor.execute("INSERT OR IGNORE INTO verbs(word, form)"
                     " VALUES(?, ?)", (word, num))
                 self.__conn.commit()
-
-    def insert_data_in_words(self, data):
-        for row in data:
-            self.__cursor.execute("INSERT OR IGNORE INTO words(user_id, word, translate)"
-                " VALUES(?, ?, ?)", (row[0], row[1], row[2]))
-            self.__conn.commit()
-
-    def get_data_from_db1(self):
-        data = self.__cursor.execute("SELECT user_id, word, translate FROM words")
-        return data.fetchall()
 
 
 # db = DbManage('words.db')

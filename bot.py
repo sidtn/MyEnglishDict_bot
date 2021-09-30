@@ -27,14 +27,15 @@ class Form(StatesGroup):
 @dp.message_handler(commands=['start', 'help'])
 async def process_start_command(msg: types.Message):
     await msg.reply(f'Hi {msg.from_user.username}.\n'
-    'This is a bot assistant for learning English words.\n'
-    'List of available commands:\n'
-    '/test - training the words of all users;\n'
-    '/mytest - training the words from your dictionaty;\n'
-    '/del - shows a list of the last 5 words with buttons for delete;\n'
-    '/f and verb - shows irregular verb forms;\n'
-    '/g and verb - shows infinitive or gerund to be used after the verb;\n'
-    '<b>For registration send any text to the bot.</b>', parse_mode=types.ParseMode.HTML)
+                     'This is a bot assistant for learning English words.\n'
+                     'List of available commands:\n'
+                     '/test - training the words of all users;\n'
+                     '/mytest - training the words from your dictionaty;\n'
+                     '/del - shows a list of the last 5 words with buttons for delete;\n'
+                     '/f and verb - shows irregular verb forms;\n'
+                     '/g and verb - shows infinitive or gerund to be used after the verb;\n'
+                     '<b>For registration send any text to the bot.</b>', 
+                     parse_mode=types.ParseMode.HTML)
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('request_'))
@@ -105,12 +106,12 @@ async def delere_words(msg: types.Message):
 async def words_trenager(msg: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['name'] = msg
-    if msg.text == '/test':   
+    if msg.text == '/test':
         testdata = db.get_word_for_test()
         from_dict = ''
     else:
         testdata = db.get_word_for_test(for_user=msg.from_user.id)
-        from_dict = f'[from dict {msg.from_user.username}]'
+        from_dict = f'[{msg.from_user.username}]'
     if testdata:
         variants = list(map(lambda x: x.replace(' ', '@'), testdata[1]))
         correct_answer = testdata[0][1].replace(' ', '@')
@@ -139,7 +140,7 @@ async def show_irregular_verbs(msg: types.Message):
     verb_forms = db.get_irregular_vebs(msg_text)
     if verb_forms:
         await msg.answer(f'<b>{verb_forms[4]}</b>\n{verb_forms[1]}\n{verb_forms[2]}\n{verb_forms[3]}',
-                            parse_mode=types.ParseMode.HTML)
+                         parse_mode=types.ParseMode.HTML)
     else:
         await msg.answer(f'Word [{msg_text}] not found.')
 
@@ -150,7 +151,7 @@ async def show_gerund_or_inf(msg: types.Message):
     result = db.get_data_from_verbs(msg_text)
     if result:
         await msg.answer(f'<b>{result[1]}</b> is used after the word <b>"{result[0]}"</b>',
-                            parse_mode=types.ParseMode.HTML)
+                         parse_mode=types.ParseMode.HTML)
     else:
         await msg.answer(f'Word [{msg_text}] not found.')
 
