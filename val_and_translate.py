@@ -4,6 +4,8 @@ import enchant
 import translators as ts
 from gtts import gTTS
 from db_manager import DbManage
+from datetime import datetime
+
 
 db = DbManage('words.db')
 
@@ -42,7 +44,9 @@ def word_validator_and_traslator(text: str,):
                 if not db.find_word(translate):
                     download_audio(translate)
             return text, translate
-        except:
+        except Exception as err:
+            with open('logerrosr.txt', 'a') as file:
+                file.write(f'{type(err).__name__} {err} - {text} - {datetime.now()}\n')
             return 'The translation failed.'
     elif lang == 'en_US':
         try:
@@ -54,8 +58,10 @@ def word_validator_and_traslator(text: str,):
                 if not db.find_word(text):
                     download_audio(text)
             return translate, text
-        except:
-            return 'The translation failed.'
+        except Exception as err:
+            with open('logerrors.txt', 'a') as file:
+                file.write(f'{type(err).__name__} {err} - {text} - {datetime.now()}\n')
+            return 'The translation failed.'    
 
 
 def download_audio(name_audio):

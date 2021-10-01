@@ -26,7 +26,7 @@ class Form(StatesGroup):
 
 @dp.message_handler(commands=['start', 'help'])
 async def process_start_command(msg: types.Message):
-    await msg.reply(f'Hi {msg.from_user.username}.\n'
+    await msg.reply(f'Hi {msg.from_user.first_name}.\n'
                      'This is a bot assistant for learning English words.\n'
                      'List of available commands:\n'
                      '/test - training the words of all users;\n'
@@ -111,7 +111,7 @@ async def words_trenager(msg: types.Message, state: FSMContext):
         from_dict = ''
     else:
         testdata = db.get_word_for_test(for_user=msg.from_user.id)
-        from_dict = f'[{msg.from_user.username}]'
+        from_dict = f'[{msg.from_user.first_name}]'
     if testdata:
         variants = list(map(lambda x: x.replace(' ', '@'), testdata[1]))
         correct_answer = testdata[0][1].replace(' ', '@')

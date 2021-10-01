@@ -15,7 +15,7 @@ class DbManage:
                 self.__conn = conn
                 self.__cursor = conn.cursor()
         except:
-            print('no connect to base')
+            print('no connection to base')
 
     def create_tables(self):
         self.__cursor.execute("CREATE TABLE IF NOT EXISTS users "
