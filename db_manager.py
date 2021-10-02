@@ -70,6 +70,10 @@ class DbManage:
         else:
             return ()
 
+    def get_count_words(self, user_id):
+        count = self.__cursor.execute("SELECT count(word) FROM words WHERE user_id = (?)", (user_id,)).fetchone()
+        return count[0]
+
     def get_irregular_vebs(self, word):
         result = self.__cursor.execute("SELECT * FROM irregularverb WHERE form1 LIKE (?)"
                                        "OR form2 LIKE (?) OR form3 LIKE (?) OR translate LIKE (?)",
@@ -86,8 +90,8 @@ class DbManage:
                                       "ORDER BY rowid DESC LIMIT 5;", (user_id,)).fetchall()
         return words
 
-    def del_record(self, word):
-        record = self.__cursor.execute("DELETE FROM words WHERE word LIKE (?);", (word,))
+    def del_record(self, word, user_id):
+        record = self.__cursor.execute("DELETE FROM words WHERE word LIKE (?) AND user_id = (?);", (word, user_id,))
         self.__conn.commit()   
 
     def download_audio(self):

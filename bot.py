@@ -34,6 +34,7 @@ async def process_start_command(msg: types.Message):
                      '/del - shows a list of the last 5 words with buttons for delete;\n'
                      '/f and verb - shows irregular verb forms;\n'
                      '/g and verb - shows infinitive or gerund to be used after the verb;\n'
+                     '/count - shows the number of words in your dictionary;'
                      '<b>For registration send any text to the bot.</b>', 
                      parse_mode=types.ParseMode.HTML)
 
@@ -82,8 +83,9 @@ async def check_answer(call: types.CallbackQuery, state: FSMContext):
 async def check_answer(call: types.CallbackQuery, state: FSMContext):
     await call.answer()
     word_for_delete = call.data.split('_')[1]
-    db.del_record(word_for_delete)
-    os.remove(f'words_audio/{word_for_delete}.mp3')
+    db.del_record(word_for_delete, call.from_user.id)
+    if not db.find_word(word_for_delete):
+        os.remove(f'words_audio/{word_for_delete}.mp3')
     await call.message.answer(f'Record [{word_for_delete}] was deleted')
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
 
@@ -154,6 +156,11 @@ async def show_gerund_or_inf(msg: types.Message):
                          parse_mode=types.ParseMode.HTML)
     else:
         await msg.answer(f'Word [{msg_text}] not found.')
+
+@dp.message_handler(lambda msg: msg.text.startswith('/count') and msg.from_user.id in ALLOWED_USERS)
+async def show_count(msg: types.Message):
+    count = db.get_count_words(msg.from_user.id)
+    await msg.answer(f'There are <b>{str(count)}</b> words in your dictionary.', parse_mode=types.ParseMode.HTML)     
 
 
 @dp.message_handler(lambda msg: msg.from_user.id in ALLOWED_USERS)
