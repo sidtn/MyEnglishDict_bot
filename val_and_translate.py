@@ -39,7 +39,7 @@ def word_validator_and_traslator(text: str,):
             text = re.sub("[^'\-а-яёА-ЯЁ\s]", "", text)
             text = re.sub(r"[\x5E\\]", "", text)
             text = re.sub("[\\s]{2,}", " ", text).strip()
-            translate = ts.google(text, from_language='ru', to_language='en').lower()
+            translate = ts.bing(text, from_language='ru', to_language='en').lower()
             if len(translate.split(' ')) <= 3:
                 if not db.find_word(translate):
                     download_audio(translate)
@@ -53,7 +53,7 @@ def word_validator_and_traslator(text: str,):
             text = re.sub("[^'\-a-zA-z\s]", "", text)
             text = re.sub(r"[\x5E\\]", "", text)
             text = re.sub("[\\s]{2,}", " ", text).strip()
-            translate = ts.google(text, from_language='en', to_language='ru').lower()
+            translate = ts.bing(text, from_language='en', to_language='ru').lower()
             if len(text.split(' ')) <= 3:
                 if not db.find_word(text):
                     download_audio(text)
@@ -67,3 +67,4 @@ def word_validator_and_traslator(text: str,):
 def download_audio(name_audio):
     tts = gTTS(text=name_audio, lang='en')
     tts.save(f'words_audio/{name_audio}.mp3')
+
