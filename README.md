@@ -1,3 +1,4 @@
 # MyEnglishDict_bot
-Bot assistant for learning English \n
+Bot assistant for learning English 
+
 @wordbookep_bot
