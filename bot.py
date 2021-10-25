@@ -34,7 +34,7 @@ async def process_start_command(msg: types.Message):
                      '/del - shows a list of the last 5 words with buttons for delete;\n'
                      '/f and verb - shows irregular verb forms;\n'
                      '/g and verb - shows infinitive or gerund to be used after the verb;\n'
-                     '/count - shows the number of words in your dictionary;'
+                     '/count - shows the number of words in your dictionary;\n'
                      '<b>For registration send any text to the bot.</b>', 
                      parse_mode=types.ParseMode.HTML)
 

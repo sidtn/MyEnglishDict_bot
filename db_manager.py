@@ -120,7 +120,7 @@ class DbManage:
                 self.__conn.commit()
 
 
-# db = DbManage('words.db')
-# db.insert_data_gerund(get_gerund_or_inf())
-# db.insert_data_irregular(get_irregular_verbs())
-# db.download_audio()
+#db = DbManage('words.db')
+#db.insert_data_gerund(get_gerund_or_inf())
+#db.insert_data_irregular(get_irregular_verbs())
+#db.download_audio()

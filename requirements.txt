@@ -37,7 +37,6 @@ six==1.16.0
 sniffio==1.2.0
 soupsieve==2.2.1
 tqdm==4.62.3
-translators==4.9.5
 typing-extensions==3.10.0.2
 urllib3==1.26.7
 yarl==1.6.3
