@@ -57,16 +57,13 @@ class DbManage:
         return result.fetchone()
 
     def get_word_for_test(self, for_user=None):
-        if for_user == None:
-            all_records = self.__cursor.execute("SELECT word, translate FROM words;").fetchall()
-        else:
-            all_records = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id=(?);", 
+        all_records = self.__cursor.execute("SELECT word, translate FROM words WHERE user_id=(?);", 
                                                (for_user,)).fetchall()
-        if all_records:    
+        if len(all_records) >= 4:    
             words = random.choices(all_records, k=4)
-            variants = [words[0][1], words[1][1], words[2][1], words[3][1]]
+            variants = [words[0][0], words[1][0], words[2][0], words[3][0]]
             random.shuffle(variants)
-            return words[0], tuple(variants)
+            return words[1], tuple(variants)
         else:
             return ()
 
@@ -120,7 +117,8 @@ class DbManage:
                 self.__conn.commit()
 
 
-#db = DbManage('words.db')
-#db.insert_data_gerund(get_gerund_or_inf())
-#db.insert_data_irregular(get_irregular_verbs())
-#db.download_audio()
+db = DbManage('words.db')
+# db.insert_data_gerund(get_gerund_or_inf())
+# db.insert_data_irregular(get_irregular_verbs())
+# db.download_audio()
+db.get_word_for_test()
