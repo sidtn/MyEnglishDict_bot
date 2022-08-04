@@ -1,7 +1,7 @@
 import os
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
-ADMIN_ID = 
+ADMIN_ID = os.getenv("ADMIN_ID")
